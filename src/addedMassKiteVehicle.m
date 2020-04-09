@@ -98,7 +98,7 @@ end
 sectWidth = cv.wing.span/cv.wing.nsects;
 for i=1:1:cv.wing.nsects/2 % add circles in the +y direction
     y = (i-1)*sectWidth + sectWidth/2;
-    if abs(y) < cv.fuse.diameter*0.5 % don't need internal amsections
+    if abs(y) < cv.fuse.diameter*0.5 % don't need internal amsections - todo make this teh diameter at this location
         continue;
     end
     chord = 2*(cv.wing.tipChord - cv.wing.rootChord)/cv.wing.span*y + cv.wing.rootChord;
@@ -106,7 +106,7 @@ for i=1:1:cv.wing.nsects/2 % add circles in the +y direction
     airfoilThickness = cv.wing.thckns*chord;
     v.addSection(amsection(cv.wing.secshape,chord/2,airfoilThickness/2,sectWidth),...
         [offset;y;y*tand(cv.wing.dihedral)],...
-        [90*pi/180;cv.wing.incidence*pi/180;-cv.wing.dihedral*pi/180]); 
+        [90*pi/180;-cv.wing.incidence*pi/180;-cv.wing.dihedral*pi/180]); 
     % Note that we can rotate a little about x to account for dihedral which will create more off-diagonal terms
 end
 %v.showme('r');
@@ -120,7 +120,7 @@ for i=1:1:cv.wing.nsects/2 % add circles in the +y direction
     airfoilThickness = cv.wing.thckns*chord;
     v.addSection(amsection(cv.wing.secshape,chord/2,airfoilThickness/2,sectWidth),...
         [offset;y;-y*tand(cv.wing.dihedral)],...
-        [90*pi/180;cv.wing.incidence*pi/180;cv.wing.dihedral*pi/180]); 
+        [90*pi/180;-cv.wing.incidence*pi/180;cv.wing.dihedral*pi/180]); 
     % Note that we can rotate a little about x to account for dihedral which will create more off-diagonal terms
 end
 %v.showme('b');
@@ -130,7 +130,19 @@ end
 sectWidth = cv.hstab.span/cv.hstab.nsects;
 for i=1:1:cv.hstab.nsects/2 % add circles in the +y direction
     y = (i-1)*sectWidth + sectWidth/2;
-    if abs(y) < cv.fuse.diameter*0.5 % don't need internal amsections - todo make this radius at loc
+    if(strcmp(cv.fuse.shape,'spheroid'))
+        a = cv.fuse.length*0.5;
+        b = cv.fuse.diameter*0.5;
+        xo = cv.fuse.RNose_LE(1) + a;
+        if cv.hstab.rootLE(1) > b
+            minRadius = 0;
+        else
+            minRadius = b*sqrt(1-(cv.hstab.rootLE(1)-xo)^2/a^2);
+        end
+    else
+        error('Only spheroid fuselage currently supported');
+    end
+    if abs(y) < minRadius % don't need internal amsections - todo make this radius at loc
         continue;
     end
     chord = 2*(cv.hstab.tipChord - cv.hstab.rootChord)/cv.hstab.span*y + cv.hstab.rootChord;
@@ -144,7 +156,19 @@ end
 %v.showme('r');
 for i=1:1:cv.hstab.nsects/2 % add circles in the +y direction
     y = -(i-1)*sectWidth - sectWidth/2;
-    if abs(y) < cv.fuse.diameter*0.5 % don't need internal amsections
+    if(strcmp(cv.fuse.shape,'spheroid'))
+        a = cv.fuse.length*0.5;
+        b = cv.fuse.diameter*0.5;
+        xo = cv.fuse.RNose_LE(1) + a;
+        if cv.hstab.rootLE(1) > b
+            minRadius = 0;
+        else
+            minRadius = b*sqrt(1-(cv.hstab.rootLE(1)-xo)^2/a^2);
+        end
+    else
+        error('Only spheroid fuselage currently supported');
+    end
+    if abs(y) < minRadius % don't need internal amsections - todo make this radius at loc
         continue;
     end
     chord = -2*(cv.hstab.tipChord - cv.hstab.rootChord)/cv.hstab.span*y + cv.hstab.rootChord;
@@ -161,10 +185,22 @@ end
 sectWidth = cv.vstab.span/cv.vstab.nsects;
 for i=1:1:cv.vstab.nsects % add circles in the +y direction
     z = (i-1)*sectWidth + sectWidth/2;
-    if abs(z) < cv.fuse.diameter*0.5 % don't need internal amsections - todo make this radius at loc
+    if(strcmp(cv.fuse.shape,'spheroid'))
+        a = cv.fuse.length*0.5;
+        b = cv.fuse.diameter*0.5;
+        xo = cv.fuse.RNose_LE(1) + a;
+        if cv.hstab.rootLE(1) > b
+            minRadius = 0;
+        else
+            minRadius = b*sqrt(1-(cv.hstab.rootLE(1)-xo)^2/a^2);
+        end
+    else
+        error('Only spheroid fuselage currently supported');
+    end
+    if abs(z) < minRadius % don't need internal amsections - todo make this radius at loc
         continue;
     end
-    chord = 2*(cv.vstab.tipChord - cv.vstab.rootChord)/cv.vstab.span*z + cv.vstab.rootChord;
+    chord = (cv.vstab.tipChord - cv.vstab.rootChord)/cv.vstab.span*z + cv.vstab.rootChord;
     offset = chord/2 + z*tand(cv.vstab.LEsweep) + cv.vstab.rootLE(1);
     airfoilThickness = cv.vstab.thckns*chord;
     v.addSection(amsection(cv.vstab.secshape,chord/2,airfoilThickness/2,sectWidth),...

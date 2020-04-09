@@ -43,7 +43,7 @@ cv.fuse.RNose_LE = [-4;0;0];
 % Let's compare to the fullSizeKiteComp just to make sure I reimplemented
 % correctly
 runname = 'fullSizeKiteComp';
-savefigs = true;
+savefigs = false;
 MA = addedMassKiteVehicle(cv,runname,savefigs);
 MA = round(MA);
 oldMA = [130           0           0           0           9           0;...
@@ -57,4 +57,78 @@ diffFrac = diffMA./oldMA;
 diffFrac(isnan(diffFrac)) = 0;
 % Looks good, now we can explore a litte.
 
+runname = 'justMoreSects';
+savefigs = true;
+cv.wing.nsects = 40;
+cv.fuse.nsects = 40;
+cv.hstab.nsects = 20;
+cv.vstab.nsects = 20;
+MA = addedMassKiteVehicle(cv,runname,savefigs);
+MA = round(MA);
+diffMA = MA - oldMA
+diffFrac = diffMA./oldMA;
+k = find(isnan(diffFrac));
+diffFrac(k) = MA(k)/1000
+
 % Let's look at crazy dihedral and sweep, plus some incidence
+runname = 'crazyWing';
+savefigs = true;
+cv.wing.LEsweep = 20;
+cv.wing.dihedral = 20;
+cv.wing.incidence = 10;
+cv.wing.nsects = 40;
+cv.fuse.nsects = 40;
+cv.hstab.nsects = 20;
+cv.vstab.nsects = 20;
+MA = addedMassKiteVehicle(cv,runname,savefigs);
+MA = round(MA);
+diffMA = MA - oldMA
+diffFrac = diffMA./oldMA;
+k = find(isnan(diffFrac));
+diffFrac(k) = MA(k)/1000
+
+% Let's look at wing incidence only
+runname = 'wingIncidence';
+savefigs = true;
+cv.wing.LEsweep = 0;
+cv.wing.dihedral = 0;
+cv.wing.incidence = 30;
+cv.wing.nsects = 40;
+cv.fuse.nsects = 40;
+cv.hstab.nsects = 20;
+cv.vstab.nsects = 20;
+MA = addedMassKiteVehicle(cv,runname,savefigs);
+MA = round(MA);
+diffMA = MA - oldMA
+diffFrac = diffMA./oldMA;
+k = find(isnan(diffFrac));
+diffFrac(k) = MA(k)/1000
+
+runname = 'crazyCrazy';
+savefigs = true;
+cv.wing.LEsweep = -20;
+cv.wing.dihedral = 20;
+cv.wing.incidence = 10;
+cv.wing.rootChord = 2.0;
+cv.wing.tipChord = 0.1;
+cv.hstab.LEsweep = 15;
+cv.hstab.dihedral = -10;
+cv.hstab.incidence = -20;
+cv.hstab.rootChord = 0.4;
+cv.hstab.tipChord = 1.0;
+cv.vstab.LEsweep = 30;
+cv.vstab.incidence = 10;
+cv.vstab.rootChord = 1.0;
+cv.vstab.tipChord = 0.2;
+cv.wing.nsects = 40;
+cv.fuse.nsects = 40;
+cv.hstab.nsects = 20;
+cv.vstab.nsects = 20;
+cv.fuse.diameter = 3.0;
+cv.fuse.length = 7.0;
+MA = addedMassKiteVehicle(cv,runname,savefigs);
+MA = round(MA);
+diffMA = MA - oldMA
+diffFrac = diffMA./oldMA;
+k = find(isnan(diffFrac));
+diffFrac(k) = MA(k)/1000
