@@ -126,6 +126,7 @@ cv.hstab.nsects = 20;
 cv.vstab.nsects = 20;
 cv.fuse.diameter = 3.0;
 cv.fuse.length = 7.0;
+cv.fuse.RNose_LE = [-4;0;0];
 MA = addedMassKiteVehicle(cv,runname,savefigs);
 MA = round(MA);
 diffMA = MA - oldMA

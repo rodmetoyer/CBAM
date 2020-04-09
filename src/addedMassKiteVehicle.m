@@ -98,7 +98,19 @@ end
 sectWidth = cv.wing.span/cv.wing.nsects;
 for i=1:1:cv.wing.nsects/2 % add circles in the +y direction
     y = (i-1)*sectWidth + sectWidth/2;
-    if abs(y) < cv.fuse.diameter*0.5 % don't need internal amsections - todo make this teh diameter at this location
+    if(strcmp(cv.fuse.shape,'spheroid'))
+        a = cv.fuse.length*0.5;
+        b = cv.fuse.diameter*0.5;
+        xo = cv.fuse.RNose_LE(1) + a;
+        if abs(cv.fuse.RNose_LE(1)) > 2*a % if the wing is not on the body
+            minRadius = 0;
+        else
+            minRadius = b*sqrt(1-(0-xo)^2/a^2);
+        end
+    else
+        error('Only spheroid fuselage currently supported');
+    end
+    if abs(y) < minRadius % don't need internal amsections - todo make this radius at loc
         continue;
     end
     chord = 2*(cv.wing.tipChord - cv.wing.rootChord)/cv.wing.span*y + cv.wing.rootChord;
@@ -112,7 +124,19 @@ end
 %v.showme('r');
 for i=1:1:cv.wing.nsects/2 % add circles in the +y direction
     y = -(i-1)*sectWidth - sectWidth/2;
-    if abs(y) < cv.fuse.diameter*0.5 % don't need internal amsections
+    if(strcmp(cv.fuse.shape,'spheroid'))
+        a = cv.fuse.length*0.5;
+        b = cv.fuse.diameter*0.5;
+        xo = cv.fuse.RNose_LE(1) + a;
+        if abs(cv.fuse.RNose_LE(1)) > 2*a
+            minRadius = 0;
+        else
+            minRadius = b*sqrt(1-(0-xo)^2/a^2);
+        end
+    else
+        error('Only spheroid fuselage currently supported');
+    end
+    if abs(y) < minRadius % don't need internal amsections - todo make this radius at loc
         continue;
     end
     chord = -2*(cv.wing.tipChord - cv.wing.rootChord)/cv.wing.span*y + cv.wing.rootChord;
@@ -134,7 +158,7 @@ for i=1:1:cv.hstab.nsects/2 % add circles in the +y direction
         a = cv.fuse.length*0.5;
         b = cv.fuse.diameter*0.5;
         xo = cv.fuse.RNose_LE(1) + a;
-        if cv.hstab.rootLE(1) > b
+        if abs(cv.hstab.rootLE(1)) > a + xo 
             minRadius = 0;
         else
             minRadius = b*sqrt(1-(cv.hstab.rootLE(1)-xo)^2/a^2);
@@ -160,7 +184,7 @@ for i=1:1:cv.hstab.nsects/2 % add circles in the +y direction
         a = cv.fuse.length*0.5;
         b = cv.fuse.diameter*0.5;
         xo = cv.fuse.RNose_LE(1) + a;
-        if cv.hstab.rootLE(1) > b
+        if abs(cv.hstab.rootLE(1)) > a + xo 
             minRadius = 0;
         else
             minRadius = b*sqrt(1-(cv.hstab.rootLE(1)-xo)^2/a^2);
@@ -220,7 +244,7 @@ if savefigs
     hfig1.CurrentAxes.YLabel.String = 'y';
     hfig1.CurrentAxes.ZLabel.String = 'z';
     savefig(hfig1,[pwd '\output\figs\' runname '.fig']);
-    export_fig([pwd '\output\figs\' runname], '-png', '-transparent','-m5');
+    export_fig([pwd '\output\figs\' runname], '-png', '-transparent');
 end
 
 % OK, let's see the added mass matrix for this guy
