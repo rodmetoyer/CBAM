@@ -1,0 +1,182 @@
+function [MA,v] = addedMassKiteVehicle(vhcl,runname,savefigs)
+% This function returns an added mass matrix and a kite vehicle with the
+% body frame origin at the centerline (root) leading edge (LE) of the wing.
+% This function makes use of the following assumptions:
+%   - The wing is made up of symmetric airfoils that are approximated by
+%      ellipses. This assumption helps locate the wing sections in the
+%      vehicle frame and has a negligible impact on the computed values. 
+%   - The fuselage is a body of rotation.
+%   - The origin of the vehicle coordinate system is coincident with the
+%      the fuselage axis of rotation and a line that is perpendicular with
+%      the fuselage axis of rotation and wing leading edge (LE).
+%   - The wing is symmetrical about the fuselage axis of rotation.
+% Temporary assumptions that can easily be relaxed with minor development
+%   - The fuselage is a speheroid
+
+% A better way to do this would be to have a slenderbody class and derived
+% classes for the types of vehicles and slender bodies. i.e. kite < vehicle
+% wing < slenderbody.
+if nargin < 1
+    vhcl.wing.rootChord = 1;
+    vhcl.wing.tipChord = 0.8; % I did this instead of AR because AR should be b^2/S, but I thought you guys might be using AR = b/c_root
+    vhcl.wing.span = 10;      % tip to tip
+    vhcl.wing.thckns = 0.12;  % as percent chord
+    vhcl.wing.LEsweep = 15;   % Note that this is not the way that sweep is typically defined in the aerospace industry
+    vhcl.wing.dihedral = 20;   % Need to think about how this is defined. Typically it is mean chamber at c/4
+    vhcl.wing.incidence = 0;
+    vhcl.wing.section = 'ellipse';
+    vhcl.wing.nsects = 30;
+    vhcl.hstab.rootChord = 0.5;
+    vhcl.hstab.tipChord = 0.4;
+    vhcl.hstab.span = 4;
+    vhcl.hstab.thckns = 0.12;  % as percent chord
+    vhcl.hstab.LEsweep = atan2d((vhcl.hstab.rootChord-vhcl.hstab.tipChord),vhcl.hstab.span);
+    vhcl.hstab.incidence = -13.5;
+    vhcl.hstab.dihedral = -20;
+    vhcl.hstab.secshape = 'ellipse';
+    vhcl.hstab.nsects = 10; % number of sections for the horizontal stabilizer
+    vhcl.hstab.rootLE = [5.5;0;0];
+    vhcl.vstab.rootChord = 0.65;
+    vhcl.vstab.tipChord = 0.52;
+    vhcl.vstab.span = 2.4375;
+    vhcl.vstab.LEsweep = 3.44;
+    vhcl.vstab.incidence = -13.5;
+    vhcl.vstab.secshape = 'ellipse';
+    vhcl.vstab.nsects = 10; % number of sections for the vertical stabilizer
+    vhcl.vstab.rootLE = [5.35;0;0];
+    vhcl.fuse.diameter = 0.4445;
+    vhcl.fuse.length = 9.02;
+    vhcl.fuse.secshape = 'ellipse';
+    vhcl.fuse.shape = 'spheroid';
+    vhcl.fuse.nsects = 40; % number of sections for the fuselage
+    vhcl.fuse.RNose_LE = [-2;0;0];
+    %vhcl.LE2
+    runname = 'test';
+    savefigs = true;
+elseif nargin == 1
+    runname = '';
+    savefigs = false;
+elseif nargin ~= 4
+    error('Only works with 0, 1, or 4 arguments. You passed %d.',nargin);
+end
+
+% make a vehicle object
+v = vehicle;
+
+% add sections - vehicleObject.addSection(section,location,rotation)
+% Fuselage
+if(strcmp(vhcl.fuse.shape,'spheroid'))
+    % A spheroid projects an ellipse from the side. If x is the coordinate
+    % along the axis and r is the perpendicular coordinate, then the
+    % equation for a ellipse is (x-xo)^2/a^2 + (r-ro)^2/b^2 = 1
+    % where a is the semimajor axis and b is the semiminor axis. 
+    sectWidth = vhcl.fuse.length/vhcl.fuse.nsects;
+    a = vhcl.fuse.length*0.5;
+    b = vhcl.fuse.diameter*0.5;
+    % xo is defined from the center of the ellipse.
+    xo = vhcl.fuse.RNose_LE(1) + a;
+    x = xo - a + sectWidth/2;
+    r = b*sqrt(1-(x-xo)^2/a^2);
+    v.addSection(section('ellipse',r,r,sectWidth),[x;0;0],[0;0;0]);
+    for i=2:1:vhcl.fuse.nsects % add circles in the +x direction towards the tail
+        x = x + sectWidth;
+        r = b*sqrt(1-(x-xo)^2/a^2);
+        v.addSection(section('ellipse',r,r,sectWidth),[x;0;0],[0;0;0]);
+    end
+    % v.showme('b'); % for development/debugging - lets you look at the
+    % shape you just made.
+else
+    error('Only spheroid fuselage currently supported');
+end
+    
+% Wings
+% Easiest to add one at a time
+sectWidth = vhcl.wing.span/vhcl.wing.nsects;
+for i=1:1:vhcl.wing.nsects/2 % add circles in the +y direction
+    y = (i-1)*sectWidth + sectWidth/2;
+    if abs(y) < vhcl.fuse.diameter*0.5 % don't need internal sections
+        continue;
+    end
+    chord = 2*(vhcl.wing.tipChord - vhcl.wing.rootChord)/vhcl.wing.span*y + vhcl.wing.rootChord;
+    offset = chord/2 + y*tand(vhcl.wing.LEsweep);
+    airfoilThickness = vhcl.wing.thckns*chord;
+    v.addSection(section('ellipse',chord/2,airfoilThickness/2,sectWidth),...
+        [offset;y;y*tand(vhcl.wing.dihedral)],...
+        [90*pi/180;vhcl.wing.incidence*pi/180;-vhcl.wing.dihedral*pi/180]); 
+    % Note that we can rotate a little about x to account for dihedral which will create more off-diagonal terms
+end
+%v.showme('r');
+for i=1:1:vhcl.wing.nsects/2 % add circles in the +y direction
+    y = -(i-1)*sectWidth - sectWidth/2;
+    if abs(y) < vhcl.fuse.diameter*0.5 % don't need internal sections
+        continue;
+    end
+    chord = -2*(vhcl.wing.tipChord - vhcl.wing.rootChord)/vhcl.wing.span*y + vhcl.wing.rootChord;
+    offset = chord/2 - y*tand(vhcl.wing.LEsweep);
+    airfoilThickness = vhcl.wing.thckns*chord;
+    v.addSection(section('ellipse',chord/2,airfoilThickness/2,sectWidth),...
+        [offset;y;-y*tand(vhcl.wing.dihedral)],...
+        [90*pi/180;vhcl.wing.incidence*pi/180;vhcl.wing.dihedral*pi/180]); 
+    % Note that we can rotate a little about x to account for dihedral which will create more off-diagonal terms
+end
+v.showme('b');
+
+% Horizontal Stabilizer
+% Easiest to add one at a time
+sectWidth = vhcl.hstab.span/vhcl.hstab.nsects;
+for i=1:1:vhcl.hstab.nsects/2 % add circles in the +y direction
+    y = (i-1)*sectWidth + sectWidth/2;
+    if abs(y) < vhcl.fuse.diameter*0.5 % don't need internal sections - todo make this radius at loc
+        continue;
+    end
+    chord = 2*(vhcl.hstab.tipChord - vhcl.hstab.rootChord)/vhcl.hstab.span*y + vhcl.hstab.rootChord;
+    offset = chord/2 + y*tand(vhcl.hstab.LEsweep) + vhcl.hstab.rootLE(1);
+    airfoilThickness = vhcl.hstab.thckns*chord;
+    v.addSection(section('ellipse',chord/2,airfoilThickness/2,sectWidth),...
+        [offset;y;y*tand(vhcl.hstab.dihedral)],...
+        [90*pi/180;vhcl.hstab.incidence*pi/180;-vhcl.hstab.dihedral*pi/180]); 
+    % Note that we can rotate a little about x to account for dihedral which will create more off-diagonal terms
+end
+%v.showme('r');
+for i=1:1:vhcl.hstab.nsects/2 % add circles in the +y direction
+    y = -(i-1)*sectWidth - sectWidth/2;
+    if abs(y) < vhcl.fuse.diameter*0.5 % don't need internal sections
+        continue;
+    end
+    chord = -2*(vhcl.hstab.tipChord - vhcl.hstab.rootChord)/vhcl.hstab.span*y + vhcl.hstab.rootChord;
+    offset = chord/2 - y*tand(vhcl.hstab.LEsweep) + vhcl.hstab.rootLE(1);
+    airfoilThickness = vhcl.hstab.thckns*chord;
+    v.addSection(section('ellipse',chord/2,airfoilThickness/2,sectWidth),...
+        [offset;y;-y*tand(vhcl.hstab.dihedral)],...
+        [90*pi/180;vhcl.hstab.incidence*pi/180;vhcl.hstab.dihedral*pi/180]); 
+    % Note that we can rotate a little about x to account for dihedral which will create more off-diagonal terms
+end
+v.showme('b');
+
+% Vertical Stabilizer
+sectWidth = vStabLength_m/nsects;
+airfoilThickness = 0.12*vStabChord_m;
+for i=1:1:nsects % add circles in the +y direction
+    z = (i-1)*sectWidth + sectWidth/2;
+    if abs(z) < fuselageRadius_m % don't need internal sections
+        continue;
+    end
+    v.addSection(section('ellipse',airfoilThickness/2,vStabChord_m/2,sectWidth),[4.35+vStabChord_m/2;0;z],[0;-90*pi/180;0]);
+end
+hfig1 = v.showme('k');
+if savefigs
+    if ~exist('..\output\figs','dir')
+        mkdir('..\output\figs');
+    end
+    hfig1.CurrentAxes.Color = 'none';
+    hfig1.CurrentAxes.Title.String = ['Sections for ' runname ' in the body frame.'];
+    hfig1.CurrentAxes.XLabel.String = 'x';
+    hfig1.CurrentAxes.YLabel.String = 'y';
+    hfig1.CurrentAxes.ZLabel.String = 'z';
+    savefig(hfig1,['..\output\figs\' runname '.fig']);
+    export_fig(['..\output\figs\' runname], '-png', '-transparent','-m5');
+end
+
+% OK, let's see the added mass matrix for this guy
+MA = v.getAddedMass;
+MA = round(MA) % round to the nearest integer to remove numerical noise

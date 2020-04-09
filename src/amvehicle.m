@@ -1,4 +1,4 @@
-classdef vehicle < handle
+classdef amvehicle < handle
     % a vehicle made up of slender bodis
     
     properties (SetAccess = private)
@@ -8,10 +8,10 @@ classdef vehicle < handle
     end % private properties
     
     methods
-        function hobj = vehicle
+        function hobj = amvehicle
             % Make a vehicle, then add sections and locations to the
             % vehcile.
-            hobj.sections = section.empty;
+            hobj.sections = amsection.empty;
             hobj.sectLocs = [];
             hobj.sectOrnts = [];
         end

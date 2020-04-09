@@ -18,15 +18,15 @@ horStabChord_m = 0.5;
 vStabLength_m = 2.4375;
 vStabChord_m = 0.52;
 
-nsects = 5; % number of sections in each slender body
+nsects = 10; % number of amsections in each slender body
 runname = 'almostAyazConfiguration3';
 savefigs = true;
 
 % make a vehicle object
-v = vehicle;
+v = amvehicle;
 
 
-% add sections
+% add amsections
 % addSection(location,orientation)
 % Fuselage
 sectWidth = lngthToTail/nsects;
@@ -35,7 +35,7 @@ offset = lngthToTail - halfEllipse; %
 for i=1:1:nsects % add circles in the +x direction
     x = (i-1)*sectWidth + sectWidth/2;
     r = fuselageRadius_m*sqrt(1-(x-offset)^2/halfEllipse^2);
-    v.addSection(section('ellipse',r,r,sectWidth),[x;0;0],[0;0;0]);
+    v.addSection(amsection('ellipse',r,r,sectWidth),[x;0;0],[0;0;0]);
 end
 v.showme('r');
 %pause
@@ -46,7 +46,7 @@ sectWidth = lngthToNose/nsects;
 for i=1:1:nsects % add circles in the -x direction
     x = -((i-1)*sectWidth + sectWidth/2);
     r = fuselageRadius_m*sqrt(1-(x-offset)^2/halfEllipse^2);
-    v.addSection(section('ellipse',r,r,sectWidth),[x;0;0],[0;0;0]);
+    v.addSection(amsection('ellipse',r,r,sectWidth),[x;0;0],[0;0;0]);
 end
 v.showme('b');
 
@@ -55,18 +55,18 @@ sectWidth = halfWingLength_m/nsects;
 airfoilThickness = wingThickFrac*wingChord_m;
 for i=1:1:nsects % add circles in the +y direction
     y = (i-1)*sectWidth + sectWidth/2;
-    if abs(y) < fuselageRadius_m % don't need internal sections
+    if abs(y) < fuselageRadius_m % don't need internal amsections
         continue;
     end
-    v.addSection(section('ellipse',wingChord_m/2,airfoilThickness/2,sectWidth),[wingTipOffset_m;y;0],[90*pi/180;0;0]);
+    v.addSection(amsection('ellipse',wingChord_m/2,airfoilThickness/2,sectWidth),[wingTipOffset_m;y;0],[90*pi/180;0;0]);
 end
 v.showme('r');
 for i=1:1:nsects % add circles in the -y direction
     y = (i-1)*sectWidth + sectWidth/2;
-    if abs(y) < fuselageRadius_m % don't need internal sections
+    if abs(y) < fuselageRadius_m % don't need internal amsections
         continue;
     end
-    v.addSection(section('ellipse',wingChord_m/2,airfoilThickness/2,sectWidth),[wingTipOffset_m;-y;0],[90*pi/180;0;0]);
+    v.addSection(amsection('ellipse',wingChord_m/2,airfoilThickness/2,sectWidth),[wingTipOffset_m;-y;0],[90*pi/180;0;0]);
 end
 v.showme('b');
 
@@ -75,18 +75,18 @@ sectWidth = halfHorStabLength_m/nsects;
 airfoilThickness = 0.12*horStabChord_m;
 for i=1:1:nsects % add circles in the +y direction
     y = (i-1)*sectWidth + sectWidth/2;
-    if abs(y) < fuselageRadius_m % don't need internal sections - todo make this the diameter at the point... or something. Make it better.
+    if abs(y) < fuselageRadius_m % don't need internal amsections - todo make this the diameter at the point... or something. Make it better.
         continue;
     end
-    v.addSection(section('ellipse',horStabChord_m/2,airfoilThickness/2,sectWidth),[4.35+horStabChord_m/2;y;0],[90*pi/180;0;0]);
+    v.addSection(amsection('ellipse',horStabChord_m/2,airfoilThickness/2,sectWidth),[4.35+horStabChord_m/2;y;0],[90*pi/180;0;0]);
 end
 v.showme('r');
 for i=1:1:nsects % add circles in the -y direction
     y = (i-1)*sectWidth + sectWidth/2;
-    if abs(y) < fuselageRadius_m % don't need internal sections
+    if abs(y) < fuselageRadius_m % don't need internal amsections
         continue;
     end
-    v.addSection(section('ellipse',horStabChord_m/2,airfoilThickness/2,sectWidth),[4.35+horStabChord_m/2;-y;0],[90*pi/180;0;0]);
+    v.addSection(amsection('ellipse',horStabChord_m/2,airfoilThickness/2,sectWidth),[4.35+horStabChord_m/2;-y;0],[90*pi/180;0;0]);
 end
 v.showme('b');
 
@@ -95,10 +95,10 @@ sectWidth = vStabLength_m/nsects;
 airfoilThickness = 0.12*vStabChord_m;
 for i=1:1:nsects % add circles in the +y direction
     z = (i-1)*sectWidth + sectWidth/2;
-    if abs(z) < fuselageRadius_m % don't need internal sections
+    if abs(z) < fuselageRadius_m % don't need internal amsections
         continue;
     end
-    v.addSection(section('ellipse',airfoilThickness/2,vStabChord_m/2,sectWidth),[4.35+vStabChord_m/2;0;z],[0;-90*pi/180;0]);
+    v.addSection(amsection('ellipse',airfoilThickness/2,vStabChord_m/2,sectWidth),[4.35+vStabChord_m/2;0;z],[0;-90*pi/180;0]);
 end
 hfig1 = v.showme('k');
 if savefigs

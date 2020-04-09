@@ -1,4 +1,4 @@
-classdef section < handle
+classdef amsection < handle
     
     properties (SetAccess = private)
         lenY   % [real] characteristic length in the y direction
@@ -11,7 +11,7 @@ classdef section < handle
     end %properties
     
     methods
-        function hobj = section(shp,ly,lz,dl,m1,m2,m3)
+        function hobj = amsection(shp,ly,lz,dl,m1,m2,m3)
             if nargin < 4
                 dl = NaN;
             end
@@ -22,7 +22,7 @@ classdef section < handle
                 error('User defined added mass for sections not implemented');
             end
             rho = 1000; % Assume water for now
-            [m22, m33, m44] = section.computeAddedMass(rho,shp,ly,lz);
+            [m22, m33, m44] = amsection.computeAddedMass(rho,shp,ly,lz);
             % todo validate. rectangle and diamond must have lenY and lenZ > 0
             hobj.shape = shp;
             hobj.lenY = ly;
