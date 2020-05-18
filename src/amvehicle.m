@@ -37,9 +37,11 @@ classdef amvehicle < handle
                     pts_B(:,j) = B_C_a*[0;secpts(:,j)] + hobj.sectLocs(:,i);
                 end
                 plot3(ax1,pts_B(1,:),pts_B(2,:),pts_B(3,:),clr);
-                axis equal;
+                axscale = max(max(abs(pts_B)));
+                axis([-axscale axscale -axscale axscale -axscale axscale]);                
             end % loop over sections
             hold off;
+            axis equal;
             view(-45,30);
         end
         

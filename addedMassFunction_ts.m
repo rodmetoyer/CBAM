@@ -56,7 +56,19 @@ diffMA = MA - oldMA;
 diffFrac = diffMA./oldMA;
 diffFrac(isnan(diffFrac)) = 0;
 % Looks good, now we can explore a litte.
+% Save this one as the baseline for comparison
+baselineMA = MA;
 
+%% Sensitivity analysis
+% look at sensititvity of each component of the added mass matrix to
+% variations in the parameters
+% dMA/dFuselageRadius
+% dMA/dSweep
+% dMA/dDihedral
+% etc.
+
+%% Random Examples - saving here for the copy-paste value
+if false % change to true to run these
 runname = 'justMoreSects';
 savefigs = true;
 cv.wing.nsects = 40;
@@ -126,10 +138,11 @@ cv.hstab.nsects = 20;
 cv.vstab.nsects = 20;
 cv.fuse.diameter = 3.0;
 cv.fuse.length = 7.0;
-cv.fuse.RNose_LE = [-4;0;0];
+cv.fuse.RNose_LE = [-6;0;0];
 MA = addedMassKiteVehicle(cv,runname,savefigs);
 MA = round(MA);
 diffMA = MA - oldMA
 diffFrac = diffMA./oldMA;
 k = find(isnan(diffFrac));
 diffFrac(k) = MA(k)/1000
+end % end random examples
