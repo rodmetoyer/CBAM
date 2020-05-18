@@ -45,9 +45,12 @@ classdef amvehicle < handle
             view(-45,30);
         end
         
-        function MA = getAddedMass(hobj)
+        function MA = getAddedMass(hobj,rho)
             MA = zeros(6);
             for i=1:1:numel(hobj.sections)
+                if nargin > 1
+                    computeCoeffs(hobj.sections(i),rho); % Compute added mass for rho density (water is the default medium)
+                end
                 a22 = hobj.sections(i).MA22;
                 a33 = hobj.sections(i).MA33;
                 a44 = hobj.sections(i).MA44;
